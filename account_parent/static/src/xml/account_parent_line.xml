@@ -12,7 +12,7 @@
 
     <t t-name="report_coa_lines">
         <t t-set="trclass" t-value="'o_coa_default_style'"/>
-        <t t-if="l.type == 'view'"><t t-set="trclass" t-value="'o_coa_level'"/></t>
+        <t t-if="l.type == 'view' or l.has_child"><t t-set="trclass" t-value="'o_coa_level'"/></t>
         <t t-set="space_td" t-value="'background-position: ' + 19*(l.level-1) + 'px; padding-left: ' + (4 + 19*(l.level-1)) + 'px;'"/>
 <!--         <t t-set="space_td" t-value="'margin-left: '+ l.level + 'px;'"/> -->
         <t t-set="domainClass" t-value="'o_coa_domain_line_0'"/>
