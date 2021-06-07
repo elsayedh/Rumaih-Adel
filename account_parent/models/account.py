@@ -32,7 +32,7 @@ class AccountAccountTemplate(models.Model):
 		# one Customer informed an issue that the same args is updated to company causing error
 		# So to avoid that args was copied to new variable and it solved the issue.
 		if not context.get('show_parent_account',False):
-			new_args = expression.AND([[('user_type_id.type', '!=', 'view')], new_args])
+			new_args = expression.AND([[], new_args])
 		return super(AccountAccountTemplate, self)._search(new_args, offset=offset,
 						limit=limit, order=order, count=count,access_rights_uid=access_rights_uid)
 
@@ -45,7 +45,8 @@ class AccountAccountType(models.Model):
 
 class AccountAccount(models.Model):
 	_inherit = "account.account"
-	
+
+
 	@api.depends('code')
 	def _compute_account_root(self):
 		# this computes the first 2 digits of the account.
@@ -54,10 +55,10 @@ class AccountAccount(models.Model):
 		# So instead, we make it a many2one to a psql view with what we need as records.
 		# TODO now view accounts is not listed under the root view
 		for record in self:
-			if record.user_type_id.type != 'view':
-				record.root_id = record.code and (ord(record.code[0]) * 1000 + ord(record.code[1:2] or '\x00')) or False
-			else:
-				record.root_id = False
+			# if record.user_type_id.type != 'view':
+			record.root_id = record.code and (ord(record.code[0]) * 1000 + ord(record.code[1:2] or '\x00')) or False
+			# else:
+			# 	record.root_id = False
 
 	@api.depends('move_line_ids', 'move_line_ids.amount_currency', 'move_line_ids.debit', 'move_line_ids.credit')
 	def compute_values(self):
@@ -101,11 +102,21 @@ class AccountAccount(models.Model):
 	child_ids = fields.One2many('account.account', 'parent_id', 'Child Accounts')
 	parent_path = fields.Char(index=True)
 	initial_balance = fields.Float(compute="compute_values", digits=(16, 4), string='Initial Balance')
+	has_child = fields.Boolean(string="Has Child", compute='_compute_has_child')
+
 
 	_parent_name = "parent_id"
 	_parent_store = True
 	_parent_order = 'code, name'
 	_order = 'code, id'
+
+	@api.depends('child_ids')
+	def _compute_has_child(self):
+		for record in self:
+			if len(record.child_ids) >= 1:
+				record.has_child = True
+			else:
+				record.has_child = False
 	
 	@api.model
 	def _search(self, args, offset=0, limit=None, order=None, count=False, access_rights_uid=None):
@@ -123,7 +134,7 @@ class AccountAccount(models.Model):
 		# one Customer informed an issue that the same args is updated to company causing error
 		# So to avoid that args was copied to new variable and it solved the issue.
 		if not context.get('show_parent_account', False):
-			new_args = expression.AND([[('user_type_id.type', '!=', 'view')], new_args])
+			new_args = expression.AND([[], new_args])
 		return super(AccountAccount, self)._search(new_args, offset=offset, limit=limit, order=order,
 												   count=count, access_rights_uid=access_rights_uid)
 
@@ -142,7 +153,7 @@ class AccountJournal(models.Model):
 		parent_id = self.env['account.account'].with_context({'show_parent_account':True}).search([
 														('code', '=', account_code_prefix),
 														('company_id', '=', company.id),
-														('user_type_id.type', '=', 'view')], limit=1)
+														], limit=1)
 		
 		if parent_id:
 			res.update({'parent_id': parent_id.id})

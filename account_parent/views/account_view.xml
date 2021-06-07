@@ -50,7 +50,7 @@
 		<field name="inherit_id" ref="account.view_account_list"/>
 		<field name="arch" type="xml">
 			<field name="user_type_id" position="after">
-				<field name="parent_id" domain="[('user_type_id.type','=','view')]"
+				<field name="parent_id"  
 					groups="account_parent.group_coas_user"
 					context="{'show_parent_account':True}" />
 			</field>

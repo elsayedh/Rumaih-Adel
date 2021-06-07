@@ -69,7 +69,7 @@ class AccountChartTemplate(models.Model):
                 else:
                     parent_account_id = account_obj.search([
                         ('code', '=', code_prefix_value),
-                        ('user_type_id.type', '=', 'view'),
+
                         ('company_id', '=', company.id)], limit=1)
                 account = account_obj.search([('code', 'like', "%s%%"%code_prefix_value),
                                               ('id', '!=', parent_account_id.id),
