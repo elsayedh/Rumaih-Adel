@@ -36,6 +36,22 @@ class AccountJournal(models.Model):
         comodel_name='account.account', check_company=True, copy=False, ondelete='restrict',
         string='Default Account')
 
+    @api.depends('type')
+    def _compute_default_account_type(self):
+        default_account_id_types = {
+            'bank': 'account.data_account_type_liquidity',
+            'cash': 'account.data_account_type_liquidity',
+            'sale': 'account.data_account_type_revenue',
+            # 'purchase': 'account.data_account_type_expenses'
+            'purchase': 'account.data_account_type_current_assets'
+        }
+
+        for journal in self:
+            if journal.type in default_account_id_types:
+                journal.default_account_type = self.env.ref(default_account_id_types[journal.type]).id
+            else:
+                journal.default_account_type = False
+
 
 
 # class show_journal(models.Model):
